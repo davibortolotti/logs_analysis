@@ -10,12 +10,34 @@ displays the answer to the following questions, defined in the project assignmen
 2. Who are the most popular article authors of all time?
 3. On which days did more than 1% of requests lead to errors?
 
-In order to run the file and get the answers succesfully, one must first create the following views in the database:
+## Setting-up
+
+In order to run the file and get the answers successfully, one must first install the
+following components:
+
+- A python 3 interpreter, that can be found at https://www.python.org/downloads/
+- The PostgreSQL system and an up-and-running and empty database called "news".
+You should find the installation step-by-step through https://www.postgresql.org/download/.
+- The psycopg2 library (which provides an interface between Python and PostgreSQL).
+This one can be found here http://initd.org/psycopg/ or installed through pip.
+
+Afterwards, you will need to download the newsdata.sql fill, which will generate all
+the data that populates the 'news' database.
+https://d17h27t6h515a5.cloudfront.net/topher/2016/August/57b5f748_newsdata/newsdata.zip
+
+After downloading it, run the following command in the folder where you extracted it:
+
+```
+psql -d news -f newsdata.sql
+```
+
+Running psql and importing the newsdata.sql, one should execute the following
+commands in order to create the views used by the python program:
 
 ```sql
 CREATE VIEW most_popular AS
     SELECT log.path, log.status, articles.slug, articles.title, articles.id
-        FROM articles JOIN log ON log.path like '%/' || slug || '%';
+    FROM articles JOIN log ON log.path = concat('/article/', articles.slug);
 ```
 ```sql
 CREATE VIEW most_popular_auth AS
@@ -32,7 +54,7 @@ CREATE VIEW hits AS
 ```
 
 ```sql
-UPDATE VIEW notfound AS
+CREATE VIEW notfound AS
     SELECT time::date as day, COUNT(time::date) AS "hits not found"
         FROM log
         WHERE status = '404 NOT FOUND'
